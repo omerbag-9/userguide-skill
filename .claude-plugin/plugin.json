@@ -1,0 +1,10 @@
+{
+  "name": "userguide",
+  "version": "1.0.0",
+  "description": "Builds a branded, multi-page stakeholder tour of any project: real screenshots from the running app, step-by-step tasks per role, business rules, a reference page and a checklist.",
+  "author": { "name": "Omer Bag", "url": "https://github.com/omerbag-9" },
+  "homepage": "https://github.com/omerbag-9/userguide-skill",
+  "repository": "https://github.com/omerbag-9/userguide-skill",
+  "license": "MIT",
+  "keywords": ["documentation", "user-guide", "screenshots", "playwright", "onboarding"]
+}

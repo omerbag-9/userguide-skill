@@ -1,0 +1,12 @@
+{
+  "name": "omerbag-skills",
+  "owner": { "name": "Omer Bag", "url": "https://github.com/omerbag-9" },
+  "description": "Skills by Omer Bag for Claude Code.",
+  "plugins": [
+    {
+      "name": "userguide",
+      "source": ".",
+      "description": "Builds a branded, multi-page stakeholder tour of any project, with real screenshots and business rules."
+    }
+  ]
+}

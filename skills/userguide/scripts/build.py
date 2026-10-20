@@ -1,0 +1,289 @@
+"""Builds a stakeholder tour from one content file.
+
+    python3 -I build.py --content guide_content.py --shots path/to/shots --out path/to/userguide
+
+The content file (see reference/example_content.py) defines:
+  SITE  dict: id, product, captured, footer (optional), brand (see BRAND KEYS below)
+  NAV   list of (group label, [page ids]) in reading order
+  and calls page(...) for every page id in NAV.
+
+BRAND KEYS (SITE["brand"]):
+  primary      the product's main dark brand colour (sidebar-style navy, forest…)  required
+  accent       the highlight / call-to-action colour                              required
+  logo         path to a logo image, relative to the content file                optional
+  sub          small label beside the logo (default "Stakeholder tour")          optional
+  body_font    CSS font stack for text          (e.g. 'Inter, system-ui, sans-serif')
+  heading_font CSS font stack for headings      (e.g. 'Newsreader, Georgia, serif')
+  fonts_url    a Google Fonts css2 URL that loads both faces
+  light/dark   optional dicts of token overrides, e.g. {"bg": "#f6f7f9"}
+
+The build fails (exit 1) if a NAV id has no page, a referenced screenshot is
+missing, or an internal link points at a page or #anchor that does not exist.
+Only screenshots the pages reference are copied to OUT/shots.
+"""
+import argparse
+import html
+import json
+import re
+import shutil
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+ASSETS = HERE.parent / "assets"
+sys.path.insert(0, str(HERE))
+
+import guidekit  # noqa: E402
+
+
+# ── Colour maths ───────────────────────────────────────────────────────────
+
+def _rgb(hex_color):
+    h = hex_color.lstrip("#")
+    if len(h) == 3:
+        h = "".join(c * 2 for c in h)
+    return tuple(int(h[i : i + 2], 16) for i in (0, 2, 4))
+
+
+def _hex(rgb):
+    return "#" + "".join(f"{max(0, min(255, round(c))):02x}" for c in rgb)
+
+
+def mix(a, b, weight_a):
+    """weight_a of colour a, the rest of colour b."""
+    ra, rb = _rgb(a), _rgb(b)
+    return _hex(tuple(ra[i] * weight_a + rb[i] * (1 - weight_a) for i in range(3)))
+
+
+def _lum(hex_color):
+    def chan(c):
+        c /= 255
+        return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+
+    r, g, b = (chan(c) for c in _rgb(hex_color))
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def contrast(a, b):
+    la, lb = sorted((_lum(a), _lum(b)), reverse=True)
+    return (la + 0.05) / (lb + 0.05)
+
+
+def readable(color, background, toward, target=4.5):
+    """Move color toward black/white until it reaches target contrast on background."""
+    c = color
+    for _ in range(40):
+        if contrast(c, background) >= target:
+            return c
+        c = mix(toward, c, 0.08)
+    return c
+
+
+def brand_css(brand):
+    primary, accent = brand["primary"], brand["accent"]
+    white, black = "#ffffff", "#000000"
+    ramp = {
+        "brand-50": mix(primary, white, 0.07), "brand-100": mix(primary, white, 0.18),
+        "brand-200": mix(primary, white, 0.36), "brand-300": mix(primary, white, 0.56),
+        "brand-400": mix(primary, white, 0.76), "brand-500": mix(primary, white, 0.88),
+        "brand-600": primary, "brand-700": primary,
+        "brand-800": mix(primary, black, 0.72), "brand-900": mix(primary, black, 0.5),
+    }
+    bg = mix(primary, white, 0.04)
+    light = {
+        **ramp,
+        "accent": accent,
+        "accent-dark": readable(accent, white, black),
+        "accent-light": mix(accent, white, 0.5),
+        "offwhite": bg,
+        "bg": bg,
+        "surface": white,
+        "surface-2": mix(primary, white, 0.025),
+        "border": mix(primary, white, 0.12),
+        "border-strong": mix(primary, white, 0.22),
+        "fg": readable(mix(primary, black, 0.75), white, black, 10),
+        "fg-strong": readable(primary, white, black, 7),
+        "fg-muted": readable(mix(primary, "#6b7280", 0.35), white, black),
+        "link": readable(accent, white, black),
+    }
+    dark_bg = mix(primary, black, 0.45)
+    dark = {
+        "bg": dark_bg,
+        "surface": mix(primary, black, 0.68),
+        "surface-2": primary,
+        "border": mix(primary, white, 0.82),
+        "border-strong": mix(primary, white, 0.7),
+        "fg": mix(primary, white, 0.08),
+        "fg-strong": mix(primary, white, 0.03),
+        "fg-muted": readable(mix(primary, white, 0.45), dark_bg, white),
+        "link": readable(mix(accent, white, 0.6), dark_bg, white),
+    }
+    light.update(brand.get("light", {}))
+    dark.update(brand.get("dark", {}))
+    if brand.get("body_font"):
+        light["body"] = brand["body_font"]
+    if brand.get("heading_font"):
+        light["heading"] = brand["heading_font"]
+
+    def block(selector, tokens, extra=""):
+        lines = "".join(f"  --{k}: {v};\n" for k, v in tokens.items())
+        return f"{selector} {{\n{lines}{extra}}}\n"
+
+    return (
+        "/* Generated by build.py from SITE['brand'] — edit the content file, not this. */\n"
+        + block(":root", light)
+        + "\n"
+        + block(':root[data-theme="dark"]', dark, "  color-scheme: dark;\n")
+    )
+
+
+# ── Page rendering ─────────────────────────────────────────────────────────
+
+def render(site, pid, kicker, title, lede, body):
+    t = guidekit.t
+    fonts = site["brand"].get("fonts_url")
+    font_links = (
+        '    <link rel="preconnect" href="https://fonts.googleapis.com" />\n'
+        '    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />\n'
+        f'    <link href="{html.escape(fonts, quote=True)}" rel="stylesheet" />\n'
+        if fonts
+        else ""
+    )
+    footer = site.get("footer") or (
+        f"Screens were captured from {site.get('source', 'the test site')} on {site['captured']}. "
+        "Names, organisations and records are sample data."
+    )
+    return f"""<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{html.escape(title)} | {html.escape(site['product'])} tour</title>
+    <meta name="description" content="{html.escape(lede, quote=True)}" />
+{font_links}    <link rel="stylesheet" href="assets/guide.css" />
+    <link rel="stylesheet" href="assets/tour.css" />
+    <link rel="stylesheet" href="assets/brand.css" />
+    <script src="assets/site.js"></script>
+    <script src="assets/boot.js"></script>
+    <script src="assets/guide.js" defer></script>
+    <script src="assets/tour.js" defer></script>
+  </head>
+  <body data-page="{pid}">
+    <main class="g-main">
+      <div class="g-content">
+        <header class="g-pagehead">
+          <div class="g-kicker">{t(kicker)}</div>
+          <h1>{t(title)}</h1>
+          <p class="g-lede">{t(lede)}</p>
+        </header>
+
+{body}
+
+        <footer class="g-footer">
+          <p>{t(footer)}</p>
+        </footer>
+      </div>
+    </main>
+  </body>
+</html>
+"""
+
+
+# ── Build ──────────────────────────────────────────────────────────────────
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--content", required=True)
+    ap.add_argument("--shots", required=True, help="folder of captured .png screenshots")
+    ap.add_argument("--out", required=True)
+    args = ap.parse_args()
+
+    content_path = Path(args.content).resolve()
+    shots_dir = Path(args.shots).resolve()
+    out = Path(args.out).resolve()
+
+    ns = {"__file__": str(content_path), "__name__": "guide_content"}
+    sys.path.insert(0, str(content_path.parent))
+    exec(compile(content_path.read_text(encoding="utf-8"), str(content_path), "exec"), ns)  # noqa: S102
+    site, nav = ns["SITE"], ns["NAV"]
+    pages = {pg[0]: pg for pg in guidekit.PAGES}
+    errors = []
+
+    for _, ids in nav:
+        for pid in ids:
+            if pid not in pages:
+                errors.append(f"NAV lists '{pid}' but no page() defines it")
+    nav_ids = {pid for _, ids in nav for pid in ids}
+    for pid in pages:
+        if pid not in nav_ids:
+            errors.append(f"page '{pid}' is not in NAV (it would be unreachable)")
+    if "index" not in pages:
+        errors.append("there must be an 'index' page (the welcome page)")
+
+    # Anchors per page, then check every internal link and screenshot.
+    anchors = {pid: set(re.findall(r'id="([^"]+)"', pg[4])) for pid, pg in pages.items()}
+    used_shots = set()
+    for pid, pg in pages.items():
+        body = pg[4]
+        for name in re.findall(r'src="shots/([^"]+)"', body):
+            used_shots.add(name)
+            if not (shots_dir / name).is_file():
+                errors.append(f"{pid}: missing screenshot shots/{name}")
+        for href in re.findall(r'href="([^"]+)"', body):
+            if re.match(r"^(https?:|mailto:|tel:)", href):
+                continue
+            target, _, anchor = href.partition("#")
+            tpid = target[:-5] if target.endswith(".html") else (pid if not target else None)
+            if tpid is None or tpid not in pages:
+                errors.append(f"{pid}: link to unknown page '{href}'")
+            elif anchor and anchor not in anchors[tpid]:
+                errors.append(f"{pid}: link to missing anchor '{href}'")
+
+    if errors:
+        print("Build failed:\n  " + "\n  ".join(errors))
+        sys.exit(1)
+
+    if out.exists():
+        shutil.rmtree(out)
+    (out / "assets").mkdir(parents=True)
+    (out / "shots").mkdir()
+    for f in ("boot.js", "guide.js", "tour.js", "guide.css", "tour.css"):
+        shutil.copy(ASSETS / f, out / "assets" / f)
+
+    brand = dict(site["brand"])
+    logo_rel = None
+    if brand.get("logo"):
+        logo_src = (content_path.parent / brand["logo"]).resolve()
+        logo_rel = f"assets/logo{logo_src.suffix}"
+        shutil.copy(logo_src, out / logo_rel)
+    (out / "assets" / "brand.css").write_text(brand_css(brand), encoding="utf-8")
+
+    site_js = {
+        "id": site["id"],
+        "brand": {"name": site["product"], "sub": brand.get("sub", "Stakeholder tour"), "logo": logo_rel},
+        "nav": [
+            {"label": label, "items": [{"id": pid, "href": f"{pid}.html", "title": pages[pid][5]} for pid in ids]}
+            for label, ids in nav
+        ],
+    }
+    (out / "assets" / "site.js").write_text(
+        "/* Generated by build.py — edit the content file, not this. */\nwindow.GUIDE_SITE = "
+        + json.dumps(site_js, indent=2, ensure_ascii=False)
+        + ";\n",
+        encoding="utf-8",
+    )
+
+    for pid, kicker, title, lede, body, _ in guidekit.PAGES:
+        (out / f"{pid}.html").write_text(render(site, pid, kicker, title, lede, body), encoding="utf-8")
+    for name in sorted(used_shots):
+        shutil.copy(shots_dir / name, out / "shots" / name)
+
+    unused = sorted(p.name for p in shots_dir.glob("*.png") if p.name not in used_shots)
+    print(f"Built {len(pages)} pages and {len(used_shots)} screenshots into {out}")
+    if unused:
+        more = f" … and {len(unused) - 25} more" if len(unused) > 25 else ""
+        print(f"Not used ({len(unused)}): {', '.join(unused[:25])}{more}")
+
+
+if __name__ == "__main__":
+    main()

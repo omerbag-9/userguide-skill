@@ -1,0 +1,1001 @@
+/*
+  Stakeholder tour — stylesheet.
+
+  Brand-neutral defaults. build.py writes assets/brand.css, loaded after this
+  file, which redefines the colour and font tokens below with the product's
+  own values (light and dark), so components never need editing per project.
+*/
+
+:root {
+  --brand-50: #eff0f1;
+  --brand-100: #d7d8db;
+  --brand-200: #aeb2b7;
+  --brand-300: #82878f;
+  --brand-400: #555c67;
+  --brand-500: #3a434f;
+  --brand-600: #1f2937;
+  --brand-700: #1f2937;
+  --brand-800: #161e28;
+  --brand-900: #10141c;
+  --accent: #2563eb;
+  --accent-dark: #2563eb;
+  --accent-light: #92b1f5;
+  --offwhite: #f6f6f7;
+  --bg: #f6f6f7;
+  --surface: #ffffff;
+  --surface-2: #f9fafa;
+  --border: #e4e5e7;
+  --border-strong: #ced0d3;
+  --fg: #171f29;
+  --fg-strong: #1f2937;
+  --fg-muted: #505866;
+  --link: #2563eb;
+  --info: #1d4ed8;
+  --info-bg: #eff6ff;
+  --warn: #b45309;
+  --warn-bg: #fffbeb;
+  --danger: #b91c1c;
+  --danger-bg: #fef2f2;
+  --ok: #15803d;
+  --ok-bg: #f0fdf4;
+  --sidebar-w: 17.5rem;
+  --topbar-h: 3.75rem;
+  --content-max: 54rem;
+  --body: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --heading: Georgia, "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0e1219;
+  --surface: #151c25;
+  --surface-2: #1f2937;
+  --border: #47505b;
+  --border-strong: #626973;
+  --fg: #edeeef;
+  --fg-strong: #f8f9f9;
+  --fg-muted: #9a9fa5;
+  --link: #7ca1f3;
+  --info: #93c5fd;
+  --info-bg: rgba(30, 58, 138, 0.25);
+  --warn: #fcd34d;
+  --warn-bg: rgba(120, 53, 15, 0.28);
+  --danger: #fca5a5;
+  --danger-bg: rgba(127, 29, 29, 0.28);
+  --ok: #86efac;
+  --ok-bg: rgba(20, 83, 45, 0.28);
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--topbar-h) + 1.5rem);
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--body);
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: var(--link);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────────────── */
+
+.g-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: var(--topbar-h);
+  padding: 0 1.25rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.g-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-weight: 800;
+  color: var(--fg-strong);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.g-brand:hover {
+  text-decoration: none;
+}
+
+.g-brand-name {
+  font-size: 0.9375rem;
+  letter-spacing: -0.01em;
+}
+
+.g-brand-sub {
+  display: none;
+  padding-left: 0.625rem;
+  margin-left: 0.125rem;
+  border-left: 1px solid var(--border);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-muted);
+}
+
+.g-topbar-spacer {
+  flex: 1 1 auto;
+}
+
+.g-search {
+  position: relative;
+  display: none;
+}
+
+.g-search input {
+  width: 15rem;
+  padding: 0.4375rem 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.8125rem;
+}
+
+.g-search input::placeholder {
+  color: var(--fg-muted);
+}
+
+.g-iconbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.4375rem 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.g-iconbtn:hover {
+  background: var(--surface-2);
+}
+
+.g-menubtn {
+  display: inline-flex;
+}
+
+/* ── Utilities ───────────────────────────────────────────────────────────── */
+
+.g-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+
+.g-sidebar {
+  position: fixed;
+  top: var(--topbar-h);
+  bottom: 0;
+  left: 0;
+  z-index: 40;
+  width: var(--sidebar-w);
+  padding: 1.25rem 0 3rem;
+  overflow-y: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  transform: translateX(-100%);
+  transition: transform 0.18s ease-out;
+}
+
+.g-sidebar[data-open="true"] {
+  transform: translateX(0);
+}
+
+.g-scrim {
+  display: none;
+  position: fixed;
+  inset: var(--topbar-h) 0 0;
+  z-index: 30;
+  background: rgba(10, 12, 16, 0.45);
+}
+
+.g-scrim[data-open="true"] {
+  display: block;
+}
+
+.g-navgroup + .g-navgroup {
+  margin-top: 1.5rem;
+}
+
+.g-navgroup-label {
+  padding: 0 1.25rem 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--fg-muted);
+}
+
+.g-navlink {
+  display: flex;
+  align-items: baseline;
+  gap: 0.625rem;
+  padding: 0.5rem 1.25rem;
+  border-left: 3px solid transparent;
+  color: var(--fg);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.g-navlink:hover {
+  background: var(--surface-2);
+  text-decoration: none;
+}
+
+.g-navlink[aria-current="page"] {
+  border-left-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--fg-strong);
+  font-weight: 800;
+}
+
+:root[data-theme="dark"] .g-navlink[aria-current="page"] {
+  color: var(--accent);
+}
+
+.g-navlink[hidden] {
+  display: none;
+}
+
+.g-main {
+  padding: 1.75rem 1.25rem 5rem;
+}
+
+.g-content {
+  max-width: var(--content-max);
+  margin: 0 auto;
+}
+
+.g-toc {
+  display: none;
+}
+
+@media (min-width: 64rem) {
+  .g-brand-sub,
+  .g-search {
+    display: block;
+  }
+
+  .g-menubtn {
+    display: none;
+  }
+
+  .g-sidebar {
+    transform: translateX(0);
+  }
+
+  .g-scrim,
+  .g-scrim[data-open="true"] {
+    display: none;
+  }
+
+  .g-main {
+    margin-left: var(--sidebar-w);
+    padding: 2rem 2rem 6rem;
+  }
+
+  .g-content {
+    margin: 0;
+  }
+}
+
+@media (min-width: 90rem) {
+  .g-main {
+    display: grid;
+    grid-template-columns: minmax(0, var(--content-max)) 15rem;
+    gap: 3rem;
+    justify-content: start;
+  }
+
+  .g-toc {
+    display: block;
+    position: sticky;
+    top: calc(var(--topbar-h) + 2rem);
+    align-self: start;
+    max-height: calc(100vh - var(--topbar-h) - 4rem);
+    overflow-y: auto;
+    padding-left: 1rem;
+    border-left: 1px solid var(--border);
+  }
+}
+
+.g-toc-label {
+  margin-bottom: 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--fg-muted);
+}
+
+.g-toc a {
+  display: block;
+  padding: 0.25rem 0;
+  color: var(--fg-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.g-toc a[aria-current="true"] {
+  color: var(--fg-strong);
+  font-weight: 800;
+}
+
+:root[data-theme="dark"] .g-toc a[aria-current="true"] {
+  color: var(--accent);
+}
+
+/* ── Page header ─────────────────────────────────────────────────────────── */
+
+.g-pagehead {
+  padding-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.g-kicker {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--fg-muted);
+}
+
+.g-pagehead h1 {
+  margin: 0.375rem 0 0;
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--fg-strong);
+}
+
+.g-lede {
+  margin: 0.75rem 0 0;
+  max-width: 46rem;
+  font-size: 1.0625rem;
+  color: var(--fg);
+}
+
+/* ── Typography ──────────────────────────────────────────────────────────── */
+
+h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin: 3rem 0 1rem;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--fg-strong);
+  scroll-margin-top: calc(var(--topbar-h) + 1.5rem);
+}
+
+h2::before {
+  content: "";
+  width: 0.25rem;
+  height: 1.375rem;
+  flex: 0 0 auto;
+  background: var(--accent);
+}
+
+h3 {
+  margin: 2rem 0 0.625rem;
+  font-size: 1.0625rem;
+  font-weight: 800;
+  color: var(--fg-strong);
+  scroll-margin-top: calc(var(--topbar-h) + 1.5rem);
+}
+
+h4 {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: var(--fg-strong);
+}
+
+p {
+  margin: 0 0 1rem;
+}
+
+ul,
+ol {
+  margin: 0 0 1rem;
+  padding-left: 1.25rem;
+}
+
+li {
+  margin-bottom: 0.375rem;
+}
+
+li > ul,
+li > ol {
+  margin-top: 0.375rem;
+}
+
+strong {
+  font-weight: 700;
+  color: var(--fg-strong);
+}
+
+hr {
+  height: 1px;
+  margin: 2.5rem 0;
+  border: 0;
+  background: var(--border);
+}
+
+/* ── Inline chips ────────────────────────────────────────────────────────── */
+
+code{
+  padding: 0.0625rem 0.375rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 0.8125em;
+  color: var(--fg);
+  white-space: nowrap;
+}
+
+.g-ui {
+  padding: 0.0625rem 0.375rem;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  font-size: 0.875em;
+  font-weight: 700;
+  color: var(--fg-strong);
+}
+
+kbd {
+  display: inline-block;
+  padding: 0.0625rem 0.375rem;
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  background: var(--surface);
+  font-family: var(--mono);
+  font-size: 0.75em;
+  font-weight: 700;
+}
+
+/* ── Surfaces ────────────────────────────────────────────────────────────── */
+
+.g-grid {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 40rem) {
+  .g-grid[data-cols="2"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .g-grid[data-cols="3"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.g-cardlink {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 1.125rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  font-weight: 400;
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.g-cardlink:hover {
+  border-color: var(--brand-700);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+  text-decoration: none;
+}
+
+:root[data-theme="dark"] .g-cardlink:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow: none;
+}
+
+.g-cardlink-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--fg-strong);
+}
+
+.g-cardlink-desc {
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+}
+
+.g-cardlink-more {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--link);
+}
+
+/* ── Callouts ────────────────────────────────────────────────────────────── */
+
+.g-note {
+  padding: 0.875rem 1.125rem;
+  margin: 0 0 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--brand-600);
+  font-size: 0.875rem;
+}
+
+.g-note > :last-child {
+  margin-bottom: 0;
+}
+
+.g-note-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--brand-600);
+}
+
+:root[data-theme="dark"] .g-note-label {
+  color: var(--accent);
+}
+
+.g-note[data-kind="tip"] {
+  border-left-color: var(--accent);
+  background: var(--ok-bg);
+}
+
+.g-note[data-kind="tip"] .g-note-label {
+  color: var(--ok);
+}
+
+.g-note[data-kind="warn"] {
+  border-left-color: var(--warn);
+  background: var(--warn-bg);
+}
+
+.g-note[data-kind="warn"] .g-note-label {
+  color: var(--warn);
+}
+
+.g-note[data-kind="danger"] {
+  border-left-color: var(--danger);
+  background: var(--danger-bg);
+}
+
+.g-note[data-kind="danger"] .g-note-label {
+  color: var(--danger);
+}
+
+/* ── Tables ──────────────────────────────────────────────────────────────── */
+
+.g-tablewrap {
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+thead th {
+  padding: 0.625rem 0.875rem;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: left;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+tbody td,
+tbody th {
+  padding: 0.625rem 0.875rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+tbody th {
+  font-weight: 700;
+  color: var(--fg-strong);
+  white-space: nowrap;
+}
+
+tbody tr:last-child td,
+tbody tr:last-child th {
+  border-bottom: 0;
+}
+
+/* ── Steps ───────────────────────────────────────────────────────────────── */
+
+.g-steps {
+  counter-reset: g-step;
+  padding: 0;
+  margin: 0 0 1.5rem;
+  list-style: none;
+}
+
+.g-steps > li {
+  position: relative;
+  padding: 0 0 1.25rem 2.75rem;
+  margin: 0;
+}
+
+.g-steps > li::before {
+  counter-increment: g-step;
+  content: counter(g-step);
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  background: var(--brand-700);
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+:root[data-theme="dark"] .g-steps > li::before {
+  background: var(--accent);
+  color: var(--brand-900);
+}
+
+.g-steps > li::after {
+  content: "";
+  position: absolute;
+  top: 2rem;
+  bottom: 0.25rem;
+  left: 0.84375rem;
+  width: 1px;
+  background: var(--border);
+}
+
+.g-steps > li:last-child {
+  padding-bottom: 0;
+}
+
+.g-steps > li:last-child::after {
+  display: none;
+}
+
+.g-step-title {
+  display: block;
+  padding-top: 0.1875rem;
+  font-weight: 800;
+  color: var(--fg-strong);
+}
+
+.g-steps p {
+  margin: 0.25rem 0 0;
+}
+
+.g-steps ul {
+  margin: 0.5rem 0 0;
+}
+
+/* ── Definition list ─────────────────────────────────────────────────────── */
+
+.g-deflist {
+  margin: 0 0 1.5rem;
+}
+
+.g-deflist dt {
+  margin-top: 1rem;
+  font-weight: 800;
+  color: var(--fg-strong);
+}
+
+.g-deflist dt:first-child {
+  margin-top: 0;
+}
+
+.g-deflist dd {
+  margin: 0.25rem 0 0;
+  color: var(--fg);
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+
+.g-footer {
+  max-width: var(--content-max);
+  padding-top: 1.5rem;
+  margin-top: 3.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+}
+
+.g-footer p {
+  margin-bottom: 0.5rem;
+}
+
+.g-pager {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.g-pager a {
+  flex: 1 1 12rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-weight: 700;
+  color: var(--fg-strong);
+  text-decoration: none;
+}
+
+.g-pager a:hover {
+  border-color: var(--brand-700);
+  text-decoration: none;
+}
+
+.g-pager span {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--fg-muted);
+}
+
+/* ── Responsive refinements ──────────────────────────────────────────────── */
+
+/*
+  Two fixes that apply to every guide page.
+
+  **The top bar overflowed the viewport below ~28rem.** The brand and the
+  theme button are `white-space: nowrap`, so below about 450px their combined intrinsic width exceeded the screen and
+  pushed `document.scrollWidth` past it. The visible symptom was the whole page
+  scrolling sideways — every heading and paragraph looked clipped at the right
+  edge, which read as a broken layout even though the prose itself reflowed
+  correctly. A flex item cannot shrink below its min-content width unless it is
+  told it may, so the brand is given `min-width: 0` and truncates; the controls
+  keep their size because they are the part you have to be able to hit.
+*/
+
+.g-brand {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.g-brand-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.g-menubtn,
+.g-iconbtn {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 30rem) {
+  .g-topbar {
+    gap: 0.5rem;
+    padding: 0 0.75rem;
+  }
+
+  
+  .g-iconbtn {
+    padding: 0.4375rem 0.5rem;
+    font-size: 0.6875rem;
+  }
+
+  .g-main {
+    padding: 1.5rem 1rem 4rem;
+  }
+}
+
+/* Below this the subtitle goes and the logo carries the link on its own. */
+@media (max-width: 23rem) {
+  .g-brand-name {
+    display: none;
+  }
+}
+
+/*
+  Dense tables become stacked cards on a narrow screen.
+
+  `.g-tablewrap` scrolls sideways, which suits a table that is only a little too
+  wide. A table of four or more columns is unreadable that way on a phone, so
+  `data-stack` on the wrapper opts it into one card per row below 44rem. guide.js
+  copies each column heading onto its cells as `data-label`, so the labels never
+  drift from the headings, and the table stays an ordinary table for wide
+  screens, print and assistive technology.
+*/
+
+@media (max-width: 44rem) {
+  .g-tablewrap[data-stack] {
+    border: 0;
+    background: none;
+    overflow-x: visible;
+  }
+
+  .g-tablewrap[data-stack] table,
+  .g-tablewrap[data-stack] tbody,
+  .g-tablewrap[data-stack] tr,
+  .g-tablewrap[data-stack] td,
+  .g-tablewrap[data-stack] tbody th {
+    display: block;
+    width: auto;
+  }
+
+  /* Visually hidden, not removed — the headings still name the columns for AT. */
+  .g-tablewrap[data-stack] thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .g-tablewrap[data-stack] tr {
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .g-tablewrap[data-stack] tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .g-tablewrap[data-stack] tbody td,
+  .g-tablewrap[data-stack] tbody th {
+    padding: 0.625rem 0.875rem;
+    border-bottom: 1px solid var(--border);
+    white-space: normal;
+  }
+
+  .g-tablewrap[data-stack] tr > :last-child {
+    border-bottom: 0;
+  }
+
+  /* The row title, where the table has one. */
+  .g-tablewrap[data-stack] tbody th[scope="row"] {
+    background: var(--surface-2);
+    font-size: 0.875rem;
+  }
+
+  .g-tablewrap[data-stack] td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 0.1875rem;
+    font-size: 0.625rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--fg-muted);
+  }
+}
+
+/*
+  Row headings are `nowrap` so a two-word label cannot wrap mid-phrase in a wide
+  matrix. On a narrow screen that turns into the widest cell in the table and
+  forces the scroll it was meant to avoid.
+*/
+@media (max-width: 44rem) {
+  tbody th {
+    white-space: normal;
+  }
+}
+
+/* ── Print ───────────────────────────────────────────────────────────────── */
+
+@media print {
+  .g-topbar,
+  .g-sidebar,
+  .g-toc,
+  .g-scrim,
+  .g-scrim[data-open="true"],
+  .g-pager {
+    display: none;
+  }
+
+  .g-main {
+    margin: 0;
+    padding: 0;
+    display: block;
+  }
+
+  body {
+    background: #fff;
+  }
+}
+
+/* ── Brand hooks ─────────────────────────────────────────────── */
+
+h1,
+h2,
+h3 {
+  font-family: var(--heading);
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.g-brand-logo {
+  display: block;
+  height: 2rem;
+  width: auto;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.375rem;
+  background: #ffffff;
+}
